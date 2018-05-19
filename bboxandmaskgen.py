@@ -1,7 +1,9 @@
-##code developed by shiva badruswamy to generate 2-D bounding boxes on 3-D matterport data to validate if matterport data can be utilized in mask r-cnn tasks
-##Sample code inputs matterport RGB images and outputs contour data. Contour data can be used to construct bounding boxes and masks.
-##if at all we use matterport data for mask r-cnn analysis this code needs to be executed to generate 2-D bounding boxes.
-## matterport data is compute intensive so the team will be using NYU data to do initial demonstrations
+##Code largely based on openCV developed by Shiva Badruswamy to generate 2-D bounding boxes on 3-D matterport data to validate if matterport data can be input shaped for FAIR's mask r-cnn algorithm
+##Sample code inputs matterport RGB images and outputs contour data. Contour data can be used to construct bounding boxees, masks, polygons etc.
+## with these generated masks and contours the mask r-cnns utils can be used to generate bounding boxes as well.
+##I have generated 2 types of bounding boxes - a stadard one and a close fit one. The close fit BBox can be made to fit objects at any angles. 
+##Contours are extracted using Canny algorithm
+
 
 import numpy as np
 import cv2 as cv
@@ -12,13 +14,13 @@ import matplotlib.image as mpimg
 np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 # image directory path
-dirpath = "/Users/admin/Desktop/EducationandProjects/MatlabWorkspace/OpenCVcodetesting/undistorted_color_images/"
-img_name = "0f37bd0737e349de9d536263a4bdd60d_i1_3.jpg"
+dirpath = "/path/" ##set your image directory's path here
+img_name = "imgnamejpg" ##put your image name in here
 img = mpimg.imread(dirpath+img_name)
 
 # display image
 cv.imshow("Original image:"+img_name, img.astype(np.uint8))
-cv.waitKey()
+cv.waitKey() ##when cursor on image, press any key to progress in code
 cv.destroyAllWindows()
 
 # extract edges
@@ -65,11 +67,12 @@ start = 200
 end = 500
 step = 1
 color = (255,0,0)
+area_thresh = 20
 for c in contours:
     rect = cv.boundingRect(c)
-    area = cv.contourArea(c)
-    x, y, w, h = rect
-    if  area > 20 :
+    area = cv.contourArea(c) ## area under bounding box. useful to screen out bounding boxes that are less than certain sizes
+    x, y, w, h = rect ##bounding box params. 
+    if  area > area_thresh :
         print("x:",x, " y:", y, " w:",w, " h:",h, " Area:", area)
         cv.rectangle(img, (x, y), (x+w, y+h),color, 2)
         cv.putText(img, 'Area:' + str(area),
@@ -81,7 +84,7 @@ cv.destroyAllWindows()
 # Min area rectangle
 for c in contours:
     rect = cv.minAreaRect(c)
-    center, w_h, aor = rect
+    center, w_h, aor = rect ##aor = angle of rotation, w_h = (width,height) tuple, center = (x,y) tuple of bounding box center
     area = w_h[0] * w_h[1]
     if area > 20 and aor in range (0,360,90):
         print("center:", center, "width:", w_h[0], "height:", w_h[1], " aor:", aor)
